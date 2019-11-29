@@ -15,7 +15,9 @@ Future<Map> recuperaMoedas() async {
 }
 
 void main() async {
-  runApp(MaterialApp(home: Home()));
+  runApp(MaterialApp(
+      home: Home(),
+      theme: ThemeData(hintColor: Colors.amber, primaryColor: Colors.white)));
 }
 
 class Home extends StatefulWidget {
@@ -26,6 +28,35 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   double dolar = 0;
   double euro = 0;
+
+  final realController = TextEditingController();
+  final dolarController = TextEditingController();
+  final euroController = TextEditingController();
+
+  void _limparCampos() {
+    realController.text = "";
+    dolarController.text = "";
+    euroController.text = "";
+  }
+
+  void _textoAlterado(String valor, String campo) {
+    if (valor.isEmpty) {
+      _limparCampos();
+      return;
+    }
+    double valorF = double.parse(valor);
+
+    if (campo == "Real") {
+      dolarController.text = (valorF / dolar).toStringAsFixed(2);
+      euroController.text = (valorF / euro).toStringAsFixed(2);
+    } else if (campo == "Dolar") {
+      realController.text = (valorF * dolar).toStringAsFixed(2);
+      euroController.text = ((valorF * dolar) / euro).toStringAsFixed(2);
+    } else if (campo == "Euro") {
+      realController.text = (valorF * euro).toStringAsFixed(2);
+      dolarController.text = ((valorF * euro) / dolar).toStringAsFixed(2);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -70,6 +101,7 @@ class _HomeState extends State<Home> {
                 euro = snapshot.data["EUR"]["buy"];
                 debugPrint(snapshot.toString());
                 return SingleChildScrollView(
+                  padding: EdgeInsets.all(10),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: <Widget>[
@@ -78,8 +110,24 @@ class _HomeState extends State<Home> {
                         size: 150,
                         color: Colors.amber,
                       ),
-                      Text("Dolar " + dolar.toString(), style: TextStyle(fontSize: 40),),
-                      Text("Euro " + euro.toString(), style: TextStyle(fontSize: 40),),
+                      constroiTextField(
+                          "Real", "R\$", realController, _textoAlterado),
+                      Divider(),
+                      constroiTextField(
+                          "Dolar", "\$", dolarController, _textoAlterado),
+                      Divider(),
+                      constroiTextField(
+                          "Euro", "\€", euroController, _textoAlterado),
+                      Divider(),
+                      Divider(),
+                      Text(
+                        "Dolar " + dolar.toString(),
+                        style: TextStyle(fontSize: 40, color: Colors.white),
+                      ),
+                      Text(
+                        "Euro " + euro.toString(),
+                        style: TextStyle(fontSize: 40, color: Colors.white),
+                      ),
                     ],
                   ),
                 );
@@ -89,4 +137,21 @@ class _HomeState extends State<Home> {
       ),
     );
   }
+}
+
+Widget constroiTextField(
+    String label, String prefix, TextEditingController ct, Function f) {
+  return TextField(
+    controller: ct,
+    decoration: InputDecoration(
+        labelText: label.toString(),
+        labelStyle: TextStyle(color: Colors.amber),
+        border: OutlineInputBorder(),
+        prefixText: prefix.toString()),
+    style: TextStyle(color: Colors.amber, fontSize: 25),
+    onChanged: (val) {
+      f(val, label.toString());
+    },
+    keyboardType: TextInputType.number,
+  );
 }
